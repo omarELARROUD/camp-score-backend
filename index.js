@@ -42,6 +42,7 @@ app.post('/students/:id/scores', async (req, res) => {
     s.session.toString() === sessionId
   );
 
+  
   if (existing) {
     // update points
     existing.points = points;
