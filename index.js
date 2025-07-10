@@ -8,7 +8,9 @@ const Session = require('./models/Session');
 const Student = require('./models/Student');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ["https://camp-score-champ-hub.vercel.app"],
+}));
 app.use(express.json());
 
 mongoose.connect(process.env.MONGODB_URI);
@@ -57,6 +59,16 @@ app.post('/students/:id/scores', async (req, res) => {
   res.json(student);
 });
 
+// Get all Groups
+app.get('/groups', async (req, res) => {
+  const groups = await Group.find();
+  res.json(groups);
+});
+// Get all Sessions
+app.get('/sessions', async (req, res) => {
+  const sessions = await Session.find();
+  res.json(sessions);
+});
 // Get all Students with Group and Session info
 app.get('/students', async (req, res) => {
   const students = await Student.find()
