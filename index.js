@@ -77,6 +77,32 @@ app.get('/students', async (req, res) => {
   res.json(students);
 });
 
+// Delete a Student
+app.delete('/students/:id', async (req, res) => {
+    await Student.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+    }
+);
+// Delete a Group
+app.delete('/groups/:id', async (req, res) => {
+  await Group.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
+// Delete a Session
+app.delete('/sessions/:id', async (req, res) => {
+  await Session.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
+
+// Update a Student
+app.put('/students/:id', async (req, res) => {
+    await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedStudent = await Student.findById(req.params.id)
+        .populate('group')
+        .populate('scores.session');
+    res.json(updatedStudent);
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
