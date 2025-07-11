@@ -69,13 +69,34 @@ app.get('/sessions', async (req, res) => {
   const sessions = await Session.find();
   res.json(sessions);
 });
-// Get all Students with Group and Session info
+// Get all Students with scores
 app.get('/students', async (req, res) => {
   const students = await Student.find()
     .populate('group')
     .populate('scores.session');
-  res.json(students);
+
+  const transformed = students.map(s => {
+    const sessionScores = {};
+    let totalScore = 0;
+    s.scores.forEach(score => {
+      if (score.session) {
+        sessionScores[score.session._id] = score.points;
+        totalScore += score.points;
+      }
+    });
+
+    return {
+      _id: s._id,
+      name: s.name,
+      group: s.group ? s.group._id : null,
+      sessionScores,
+      totalScore
+    };
+  });
+
+  res.json(transformed);
 });
+
 
 // Delete a Student
 app.delete('/students/:id', async (req, res) => {
@@ -102,6 +123,41 @@ app.put('/students/:id', async (req, res) => {
         .populate('scores.session');
     res.json(updatedStudent);
 });
+
+// Assign session to group
+app.post('/groups/:id/assign-session', async (req, res) => {
+  const groupId = req.params.id;
+  const { sessionId } = req.body;
+
+  const group = await Group.findById(groupId);
+  if (!group) {
+    return res.status(404).json({ error: 'Group not found' });
+  }
+
+  if (!group.sessionIds.includes(sessionId)) {
+    group.sessionIds.push(sessionId);
+    await group.save();
+  }
+
+  res.json(group);
+});
+
+// Remove session from group
+app.post('/groups/:id/remove-session', async (req, res) => {
+  const groupId = req.params.id;
+  const { sessionId } = req.body;
+
+  const group = await Group.findById(groupId);
+  if (!group) {
+    return res.status(404).json({ error: 'Group not found' });
+  }
+
+  group.sessionIds = group.sessionIds.filter(id => id.toString() !== sessionId);
+  await group.save();
+
+  res.json(group);
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
